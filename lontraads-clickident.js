@@ -39,18 +39,23 @@
         for (var i = 0; i < links.length; i++) {
             var link = links[i];
             var url = new URL(link.href);
-            var linkHref = url.href.split('#')[0];
             var anchorHash = url.hash;
 
+            // Preservar parâmetros originais do link
+            var existingParams = new URLSearchParams(url.search);
+
             if (modifiedClickId) {
-                linkHref = linkHref.replace('[sclid]', modifiedClickId).replace('%5Bsclid%5D', modifiedClickId);
+                url.href = url.href.replace('[sclid]', modifiedClickId).replace('%5Bsclid%5D', modifiedClickId);
             }
 
+            // Adicionar novos parâmetros
             urlParams.forEach(function(value, key) {
-                url.searchParams.set(key, value);
+                existingParams.set(key, value);
             });
 
-            link.href = linkHref + '?' + url.searchParams.toString() + anchorHash;
+            // Reconstruir a URL com todos os parâmetros
+            url.search = existingParams.toString();
+            link.href = url.href.split('#')[0] + anchorHash;
         }
     }
 
