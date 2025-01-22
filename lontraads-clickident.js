@@ -7,8 +7,25 @@
         return new URLSearchParams(window.location.search);
     }
 
-    function enhancePageLinks() {
-        console.log("Iniciando enhancePageLinks");
+    function replaceSpacesAndDashes(inputString) {
+        return inputString.replace(/ /g, '_s_').replace(/-/g, '_d_').replace(/\//g, '');
+    }
+
+    function getClickId() {
+        var urlParams = getAllUrlParams();
+        var clickId = urlParams.get('gclid') || urlParams.get('wbraid') || urlParams.get('msclkid') || urlParams.get('fbclid') || '';
+        
+        if (clickId) {
+            localStorage.setItem('clickId', clickId);
+        } else {
+            clickId = localStorage.getItem('clickId') || '';
+        }
+
+        return clickId;
+    }
+
+    function updateLinks() {
+        console.log("Iniciando updateLinks");
         var urlParams = getAllUrlParams();
         console.log("Parâmetros da URL atual:", urlParams.toString());
 
@@ -46,45 +63,46 @@
         console.log("Current Domain:", currentDomain, "Plugin Domain:", pluginDomain);
 
         if (currentDomain !== pluginDomain) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', originUrl + '/wp-admin/admin-ajax.php', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        console.log('Dados do visitante enviados com sucesso');
-                    } else {
-                        console.error('Erro ao enviar dados do visitante');
-                    }
-                }
+            var clickId = getClickId();
+            var data = {
+                action: 'lontraads_record_visit',
+                domain: currentDomain,
+                click_id: clickId
             };
 
-            var urlParams = getAllUrlParams();
-            var data = 'action=lontraads_record_visit' +
-                       '&domain=' + encodeURIComponent(currentDomain);
-
-            urlParams.forEach(function(value, key) {
-                data += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+            getAllUrlParams().forEach(function(value, key) {
+                if (!['gclid', 'wbraid', 'msclkid', 'fbclid'].includes(key)) {
+                    data[key] = value;
+                }
             });
 
-            xhr.send(data);
+            fetch(originUrl + '/wp-admin/admin-ajax.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(data)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Dados do visitante enviados com sucesso:', data))
+            .catch(error => console.error('Erro ao enviar dados do visitante:', error));
+
             console.log("Dados enviados:", data);
         }
     }
 
     function init() {
         console.log("Iniciando funções principais");
-        enhancePageLinks();
+        updateLinks();
         sendVisitorData();
     }
 
-    if (document.readyState === 'loading') {
-        console.log("DOM ainda carregando, adicionando evento listener");
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
+    if (document.readyState !== 'loading') {
         console.log("DOM já carregado, executando funções imediatamente");
         init();
+    } else {
+        console.log("DOM ainda carregando, adicionando evento listener");
+        document.addEventListener('DOMContentLoaded', init);
     }
 
     // Adiciona um ouvinte para modificar links dinâmicos
