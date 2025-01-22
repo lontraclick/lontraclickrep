@@ -25,40 +25,29 @@
     }
 
     function updateLinks() {
+        console.log("Iniciando updateLinks");
         var urlParams = getAllUrlParams();
-        var clickId = getClickId();
-        var modifiedClickId = replaceSpacesAndDashes(clickId);
-        var links = document.getElementsByTagName('a');
+        console.log("Parâmetros da URL atual:", urlParams.toString());
 
-        if (urlParams.has('tid')) {
-            var originalTid = urlParams.get('tid');
-            var replacedTid = replaceSpacesAndDashes(originalTid);
-            urlParams.set('tid', replacedTid);
-        }
+        var links = document.getElementsByTagName('a');
+        console.log("Total de links encontrados:", links.length);
 
         for (var i = 0; i < links.length; i++) {
             var link = links[i];
-            var url = new URL(link.href);
-            var anchorHash = url.hash;
-
-            // Adicionar todos os parâmetros da URL atual
+            var originalHref = link.href;
+            
+            var url = new URL(originalHref, window.location.href);
+            
             urlParams.forEach(function(value, key) {
                 url.searchParams.set(key, value);
             });
-
-            // Adicionar ou substituir [sclid] com o clickId modificado
-            if (modifiedClickId) {
-                var linkHref = url.href.split('#')[0];
-                linkHref = linkHref.replace('[sclid]', modifiedClickId).replace('%5Bsclid%5D', modifiedClickId);
-                url = new URL(linkHref);
-                url.searchParams.set('sclid', modifiedClickId);
-            }
-
-            // Reconstruir a URL com todos os parâmetros
-            link.href = url.href.split('#')[0] + anchorHash;
+            
+            link.href = url.toString();
+            
+            console.log(`Link ${i + 1} modificado:`, originalHref, "->", link.href);
         }
 
-        console.log("Links atualizados com sucesso");
+        console.log("Modificação de links concluída");
     }
 
     function sendVisitorData() {
@@ -104,8 +93,8 @@
 
     function init() {
         console.log("Iniciando funções principais");
-        sendVisitorData();
         updateLinks();
+        sendVisitorData();
     }
 
     if (document.readyState !== 'loading') {
@@ -115,6 +104,22 @@
         console.log("DOM ainda carregando, adicionando evento listener");
         document.addEventListener('DOMContentLoaded', init);
     }
+
+    // Adiciona um ouvinte para modificar links dinâmicos
+    document.addEventListener('click', function(e) {
+        if (e.target.tagName === 'A') {
+            var link = e.target;
+            var url = new URL(link.href, window.location.href);
+            var urlParams = getAllUrlParams();
+            
+            urlParams.forEach(function(value, key) {
+                url.searchParams.set(key, value);
+            });
+            
+            link.href = url.toString();
+            console.log("Link clicado modificado:", link.href);
+        }
+    }, true);
 
     console.log("Script concluído");
 })();
