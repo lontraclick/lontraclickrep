@@ -61,12 +61,12 @@
         sendVisitorData();
     }
 
-    if (document.readyState === 'loading') {
-        console.log("DOM ainda carregando, adicionando evento listener");
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
+    if (document.readyState !== 'loading') {
         console.log("DOM já carregado, executando funções imediatamente");
         init();
+    } else {
+        console.log("DOM ainda carregando, adicionando evento listener");
+        document.addEventListener('DOMContentLoaded', init);
     }
 
     console.log("Script concluído");
