@@ -41,22 +41,24 @@
             var url = new URL(link.href);
             var anchorHash = url.hash;
 
-            // Preservar parâmetros originais do link
-            var existingParams = new URLSearchParams(url.search);
-
-            if (modifiedClickId) {
-                url.href = url.href.replace('[sclid]', modifiedClickId).replace('%5Bsclid%5D', modifiedClickId);
-            }
-
-            // Adicionar novos parâmetros
+            // Adicionar todos os parâmetros da URL atual
             urlParams.forEach(function(value, key) {
-                existingParams.set(key, value);
+                url.searchParams.set(key, value);
             });
 
+            // Adicionar ou substituir [sclid] com o clickId modificado
+            if (modifiedClickId) {
+                var linkHref = url.href.split('#')[0];
+                linkHref = linkHref.replace('[sclid]', modifiedClickId).replace('%5Bsclid%5D', modifiedClickId);
+                url = new URL(linkHref);
+                url.searchParams.set('sclid', modifiedClickId);
+            }
+
             // Reconstruir a URL com todos os parâmetros
-            url.search = existingParams.toString();
             link.href = url.href.split('#')[0] + anchorHash;
         }
+
+        console.log("Links atualizados com sucesso");
     }
 
     function sendVisitorData() {
