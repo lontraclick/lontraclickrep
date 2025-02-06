@@ -7,15 +7,19 @@
         return new URLSearchParams(window.location.search);
     }
 
+    function modifyId(value) {
+        return value.replace(/ /g, '_s_').replace(/-/g, '_d_').replace(/\//g, '');
+    }
+
     function getClickIds() {
         var urlParams = getAllUrlParams();
         var clickIds = {};
         ['gclid', 'wbraid', 'msclkid', 'fbclid'].forEach(function(param) {
             var value = urlParams.get(param);
             if (value) {
-                clickIds[param] = value;
-                localStorage.setItem(param, value);
-                console.log(`Click ID encontrado: ${param} = ${value}`);
+                clickIds[param] = modifyId(value);
+                localStorage.setItem(param, clickIds[param]);
+                console.log(`Click ID encontrado: ${param} = ${clickIds[param]}`);
             } else {
                 var storedValue = localStorage.getItem(param);
                 if (storedValue) {
@@ -41,17 +45,10 @@
             domain: currentDomain
         };
 
-        // Adiciona todos os parâmetros da URL, incluindo os clickIds
-        getAllUrlParams().forEach(function(value, key) {
-            data[key] = value;
-        });
-
-        // Adiciona os clickIds armazenados no localStorage, se não estiverem na URL
-        var storedClickIds = getClickIds();
-        for (var key in storedClickIds) {
-            if (!data[key]) {
-                data[key] = storedClickIds[key];
-            }
+        // Adiciona apenas os clickIds
+        var clickIds = getClickIds();
+        for (var key in clickIds) {
+            data[key] = clickIds[key];
         }
 
         console.log("Dados a serem enviados:", data);
@@ -88,18 +85,10 @@
             e.preventDefault();
             
             var url = new URL(target.href, window.location.href);
-            var urlParams = getAllUrlParams();
+            var clickIds = getClickIds();
             
-            urlParams.forEach(function(value, key) {
-                url.searchParams.set(key, value);
-            });
-            
-            // Adiciona clickIds armazenados, se não estiverem na URL
-            var storedClickIds = getClickIds();
-            for (var key in storedClickIds) {
-                if (!url.searchParams.has(key)) {
-                    url.searchParams.set(key, storedClickIds[key]);
-                }
+            for (var key in clickIds) {
+                url.searchParams.set(key, clickIds[key]);
             }
             
             console.log("Link clicado modificado:", url.toString());
