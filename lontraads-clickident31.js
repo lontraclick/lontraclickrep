@@ -40,11 +40,6 @@
             data[key] = clickIds[key];
         }
 
-        // Se nenhum clickId foi encontrado, envia um identificador genérico
-        if (Object.keys(clickIds).length === 0) {
-            data['generic_id'] = 'no_click_id_' + Date.now();
-        }
-
         console.log("Dados a serem enviados:", data);
 
         fetch(originUrl + '/wp-admin/admin-ajax.php', {
