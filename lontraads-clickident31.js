@@ -30,9 +30,7 @@
             return;
         }
 
-        var data = {
-            action: 'lontraads_record_visit'
-        };
+        var data = {};
 
         // Adiciona os clickIds
         var clickIds = getClickIds();
